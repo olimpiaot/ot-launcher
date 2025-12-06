@@ -6,3 +6,5 @@ out
 *.log*
 .env
 launcher-config.json
+ot-launcher-api/
+ot-launcher-uploader/
