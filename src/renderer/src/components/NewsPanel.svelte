@@ -8,12 +8,32 @@
   onMount(async () => {
     try {
       const url = await window.api.getConfig('API_URL')
+      console.log('Fetching news from:', `${url}/launcher/news`)
+      
       const response = await fetch(`${url}/launcher/news`)
-      if (!response.ok) throw new Error('Failed to fetch news')
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API Error:', response.status, errorText)
+        throw new Error(`Failed to fetch news: ${response.status}`)
+      }
 
-      news = await response.json()
+      const data = await response.json()
+      console.log('News received:', data)
+      
+      // Verificar se é um array válido
+      if (Array.isArray(data)) {
+        news = data
+      } else if (data.error) {
+        console.error('API returned error:', data.error)
+        news = []
+      } else {
+        console.warn('Unexpected response format:', data)
+        news = []
+      }
     } catch (error) {
       console.error('Error fetching news:', error)
+      news = []
     } finally {
       loading = false
     }

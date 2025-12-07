@@ -4,8 +4,8 @@
   "REGISTER_URL": "https://olimpiaot.com/account/create",
   "DISCORD_INVITE": "https://discord.gg/olimpiaot",
   "R2_CDN_URL": "https://pub-594efce4f811437d9365b77c51e76996.r2.dev",
-  "API_URL": "http://example.com:3000",
+  "API_URL": "https://api.olimpiaot.com",
   "CLIENTS": {
-    "OpenGL: "client.exe"
+    "64-bit OpenGL": "client.exe"
   }
 }
