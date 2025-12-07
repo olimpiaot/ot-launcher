@@ -3,8 +3,13 @@ import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
 import crypto from 'crypto'
+import { spawn } from 'child_process'
 import icon from '../../resources/icon.png?asset'
 import config from '../../launcher-config.json'
+
+// Argumentos obrigatórios para o cliente Olimpia.exe
+const CLIENT_STARTER_ARG = 'u7F6A4SUY76as5ITBGSYvs4YUSRVCuisYS'
+const CLIENT_RESTARTER_ARG = 'Dt54a3sY76ASFV7auisAYSDfisv'
 
 function createWindow() {
   // Create the browser window.
@@ -16,7 +21,7 @@ function createWindow() {
     show: false,
     transparent: true,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    ...(process.platform !== 'darwin' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -40,7 +45,10 @@ function createWindow() {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
-  mainWindow.webContents.openDevTools()
+  // Open DevTools only in development mode (unless DISABLE_DEVTOOLS is set)
+  if (is.dev && !process.env.DISABLE_DEVTOOLS) {
+    mainWindow.webContents.openDevTools()
+  }
 
   return mainWindow
 }
@@ -50,7 +58,7 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.olimpia.launcher')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -91,7 +99,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle('write-file', async (e, relativePath, data) => {
     const sessionPath = app.isPackaged ? app.getPath('userData') : app.getAppPath()
-    const filePath = join(sessionPath, 'otclient', relativePath)
+    const filePath = join(sessionPath, 'Olimpia', relativePath)
     const dirname = path.dirname(filePath)
     const exist = await directoryExists(dirname)
     if (!exist) {
@@ -101,15 +109,47 @@ app.whenReady().then(() => {
     await fs.promises.writeFile(filePath, Buffer.from(data))
   })
 
-  ipcMain.handle('start-game', (e, client) => {
-    const sessionPath = app.isPackaged ? app.getPath('userData') : app.getAppPath()
-    const clientPath = join(sessionPath, 'otclient', config.CLIENTS[client])
-    shell.openPath(clientPath)
+  ipcMain.handle('start-game', (e, client, restart = false) => {
+    try {
+      const sessionPath = app.isPackaged ? app.getPath('userData') : app.getAppPath()
+      const clientPath = join(sessionPath, 'Olimpia', config.CLIENTS[client])
+      const clientDir = path.dirname(clientPath)
+      
+      // Seleciona o argumento apropriado
+      const argument = restart ? CLIENT_RESTARTER_ARG : CLIENT_STARTER_ARG
+      
+      // Verifica se o arquivo do cliente existe
+      if (!fs.existsSync(clientPath)) {
+        throw new Error(`Cliente não encontrado: ${clientPath}`)
+      }
+      
+      // Inicia o cliente com o argumento obrigatório
+      const clientProcess = spawn(clientPath, [argument], {
+        cwd: clientDir,
+        detached: true,
+        stdio: 'ignore'
+      })
+      
+      // Permite que o processo pai saia sem encerrar o cliente
+      clientProcess.unref()
+      
+      // Fecha o launcher após 3 segundos
+      setTimeout(() => {
+        if (win && !win.isDestroyed()) {
+          win.close()
+        }
+      }, 3000)
+      
+      return { success: true }
+    } catch (error) {
+      console.error('Erro ao iniciar cliente:', error)
+      return { success: false, error: error.message }
+    }
   })
 
   ipcMain.handle('clean-client', async (e, manifest) => {
     const sessionPath = app.isPackaged ? app.getPath('userData') : app.getAppPath()
-    const clientDir = join(sessionPath, 'otclient')
+    const clientDir = join(sessionPath, 'Olimpia')
 
     const exists = await directoryExists(clientDir)
     if (!exists) return
@@ -128,7 +168,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle('read-client-files', async () => {
     const sessionPath = app.isPackaged ? app.getPath('userData') : app.getAppPath()
-    const clientDir = join(sessionPath, 'otclient')
+    const clientDir = join(sessionPath, 'Olimpia')
 
     const exists = await directoryExists(clientDir)
     if (!exists) return {}

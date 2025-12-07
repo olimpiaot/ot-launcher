@@ -43,6 +43,7 @@
     width: 100%;
     flex: 1;
     min-height: 0;
+    margin-top: 40px;
   }
 
   .title {

@@ -23,6 +23,11 @@
     padding-bottom: 15px;
     flex: 0 0 auto;
   }
+  
+  :global(.socials button:last-of-type) {
+    margin-right: 20px;
+    margin-left: -10px;
+  }
 
   .socials span {
     flex-grow: 1;

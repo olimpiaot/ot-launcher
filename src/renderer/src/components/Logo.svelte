@@ -109,9 +109,9 @@
 
 <style>
   :root {
-    --logo-width: 340px;
-    --logo-height: 195px;
-    --logo-margin: -60px;
+    --logo-width: 450px;
+    --logo-height: 120px;
+    --logo-margin: -120px;
   }
 
   div {
@@ -126,6 +126,7 @@
     width: var(--logo-width);
     height: var(--logo-height);
     margin-bottom: var(--logo-margin);
+    transform: translateY(15px);
     z-index: 1;
 
     -webkit-user-select: none;

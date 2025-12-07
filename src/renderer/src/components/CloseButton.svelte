@@ -2,13 +2,23 @@
   import Button from './Button.svelte'
 </script>
 
-<Button className="close-button" label="X" onClick={() => window.api.close()} />
+<Button className="close-button" label="✕" onClick={() => window.api.close()} />
 
 <style>
   :global(.close-button) {
-    position: absolute;
-    right: 0;
-    top: calc(var(--logo-margin) + 10px);
-    font-size: 14px;
+    position: fixed;
+    right: 0px;
+    top: 0px;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 9999;
+    padding: 0;
+    min-width: 30px;
+  }
+  
+  :global(.close-button:hover) {
+    background-color: rgba(255, 0, 0, 0.2) !important;
   }
 </style>

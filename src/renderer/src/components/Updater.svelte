@@ -3,7 +3,6 @@
   import { writable, get } from 'svelte/store'
   import { DownloadPool } from '../pool.js'
   import Button from './Button.svelte'
-  import ClientSelector from './ClientSelector.svelte'
 
   const latestFileProgress = writable(0)
   const latestFileLabel = writable('')
@@ -18,7 +17,7 @@
   let totalFilesToWrite = 0
   let speedInterval = null
   let downloadFinished = false
-  let selectedClient = '64-bit OpenGL'
+  let selectedClient = ''
 
   const pool = new DownloadPool({
     concurrency: Math.min(6, navigator.hardwareConcurrency),
@@ -139,6 +138,13 @@
 
   onMount(async () => {
     try {
+      // Get the first client from CLIENTS config
+      const clients = await window.api.getConfig('CLIENTS')
+      const firstClientKey = Object.keys(clients)[0]
+      if (firstClientKey) {
+        selectedClient = firstClientKey
+      }
+
       R2_CDN_URL = await window.api.getConfig('R2_CDN_URL')
 
       const manifestRes = await fetch(`${R2_CDN_URL}/manifest.json`, { cache: 'no-store' })
@@ -187,11 +193,10 @@
     <div class="file">{$latestFileLabel}</div>
   </div>
   <div class="play">
-    <ClientSelector bind:selectedClient />
     <Button
       style="height:100%;font-size: 32px;"
       label="Play"
-      disabled={!downloadFinished}
+      disabled={!downloadFinished || !selectedClient}
       onClick={() => window.api.startGame(selectedClient)}
     />
   </div>
